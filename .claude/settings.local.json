@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"/c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector\" && python -m venv .venv)",
+      "Bash(cd \"/c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector\" && .venv/Scripts/pip install -r requirements.txt)",
+      "Bash(tree -I '.venv|__pycache__|*.pyc' -L 3 /c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector 2>/dev/null || find /c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector -not -path \"./.venv/*\" -not -path \"*/__pycache__/*\" -type f -o -type d | grep -v \".venv\" | sort)",
+      "Bash(\"C:/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector/.venv/Scripts/python.exe\" -c \"import fastapi, sqlalchemy, pydantic; print\\('OK'\\)\" 2>&1)",
+      "Bash(tree -L 3 /c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector -I '.venv|__pycache__|*.pyc' 2>/dev/null || find /c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector -not -path '*/.venv/*' -not -path '*/__pycache__/*' -type f | sort)",
+      "Bash(ls -lah /c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector/.env* 2>/dev/null | head -20)",
+      "Bash(curl -s -X POST http://localhost:8000/auth/register -H \"Content-Type: application/json\" -d \"{\\\\\"username\\\\\":\\\\\"user\\\\\",\\\\\"email\\\\\":\\\\\"user@example.com\\\\\",\\\\\"password\\\\\":\\\\\"password\\\\\",\\\\\"role\\\\\":\\\\\"engineer\\\\\"}\")",
+      "Bash(curl -sv -X POST http://localhost:8000/auth/register -H \"Content-Type: application/json\" -d \"{\\\\\"username\\\\\":\\\\\"user\\\\\",\\\\\"email\\\\\":\\\\\"user@example.com\\\\\",\\\\\"password\\\\\":\\\\\"password\\\\\",\\\\\"role\\\\\":\\\\\"engineer\\\\\"}\" 2>&1 | tail -20)",
+      "Bash(curl -s -X POST http://localhost:8000/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"user\",\"password\":\"password\"}' | python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('access_token','ERROR:',d\\)[:60]\\)\")",
+      "WebFetch(domain:wp.atorcom.fi)",
+      "Bash(cd \"C:\\\\Users\\\\Nitz\\\\OneDrive\\\\Documents\\\\Portafolio\\\\OPC-UA-Data-Collector\" && docker compose exec db psql -U opc_user -d opc_db -c \"UPDATE users SET role='admin' WHERE username='admin';\")",
+      "Bash(tree -L 3 -I '__pycache__|node_modules|.git|dist|.venv|.pytest_cache' /c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector 2>/dev/null || find /c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector -maxdepth 3 -type d ! -path \"*/__pycache__/*\" ! -path \"*/node_modules/*\" ! -path \"*/.venv/*\" ! -path \"*/.pytest_cache/*\" | sed 's|/c/Users/Nitz/OneDrive/Documents/Portafolio/OPC-UA-Data-Collector|.|g' | sort)"
+    ]
+  }
+}

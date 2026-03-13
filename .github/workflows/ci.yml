@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Job 1: Lint & format ────────────────────────────────────────────────────
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ruff
+        run: pip install ruff==0.4.4
+
+      - name: Check lint rules
+        run: ruff check .
+
+      - name: Check formatting
+        run: ruff format --check .
+
+  # ── Job 2: Type check ───────────────────────────────────────────────────────
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies + mypy
+        run: pip install -r requirements.txt mypy==1.10.0
+
+      - name: Run mypy
+        run: mypy app/ --ignore-missing-imports
+
+  # ── Job 3: Test ─────────────────────────────────────────────────────────────
+  test:
+    name: Test (Postgres)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: opc_user
+          POSTGRES_PASSWORD: opc_password
+          POSTGRES_DB: opc_test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest-cov
+
+      - name: Run Alembic migrations
+        # Alembic CLI uses psycopg2 (sync driver) — see alembic.ini
+        env:
+          DATABASE_URL: postgresql+psycopg2://opc_user:opc_password@localhost:5432/opc_test_db
+          JWT_SECRET: ci-test-secret-not-for-production
+        run: alembic upgrade head
+
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql+asyncpg://opc_user:opc_password@localhost:5432/opc_test_db
+          JWT_SECRET: ci-test-secret-not-for-production
+        run: pytest --cov=app --cov-report=xml --cov-report=term-missing -v
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 14
+
+  # ── Job 4: Docker build ─────────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build production image
+        run: docker build -t opc-ua-data-collector:ci .
+        # Verifies the multi-stage build (Node frontend + Python API) succeeds.
+        # Does not push to any registry — add docker/login-action for that.
