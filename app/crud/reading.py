@@ -83,7 +83,7 @@ async def get_latest_readings_by_equipment(
         .order_by(Tag.name)
     )
     result = await db.execute(stmt)
-    return list(result.all())
+    return [(reading, tag) for reading, tag in result.all()]
 
 
 async def get_readings_by_equipment(

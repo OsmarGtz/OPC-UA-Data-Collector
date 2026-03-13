@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.tag import Tag
 
 
 class Reading(Base):
@@ -22,4 +28,4 @@ class Reading(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now(), index=True
     )
 
-    tag: Mapped["Tag"] = relationship("Tag", back_populates="readings")  # noqa: F821
+    tag: Mapped[Tag] = relationship("Tag", back_populates="readings")

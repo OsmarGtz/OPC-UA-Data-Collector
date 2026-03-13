@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.tag import Tag
 
 
 class Equipment(Base):
@@ -20,6 +26,6 @@ class Equipment(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    tags: Mapped[list["Tag"]] = relationship(  # noqa: F821
+    tags: Mapped[list[Tag]] = relationship(
         "Tag", back_populates="equipment", cascade="all, delete-orphan"
     )

@@ -11,8 +11,8 @@ leave the alerts table in a half-written state.
 """
 
 import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -75,7 +75,7 @@ class RuleEvaluator:
         }
 
         now_mono = time.monotonic()
-        now_dt = datetime.now(timezone.utc)
+        now_dt = datetime.now(UTC)
         changed = False
 
         for rule in rules:

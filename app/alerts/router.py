@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
@@ -135,7 +135,7 @@ async def acknowledge_alert(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Alert already acknowledged."
         )
-    alert.acknowledged_at = datetime.now(timezone.utc)
+    alert.acknowledged_at = datetime.now(UTC)
     alert.acknowledged_by = current_user.id
     await db.commit()
     await db.refresh(alert)

@@ -5,11 +5,11 @@ export interface CreateUserPayload {
   username: string;
   email: string;
   password: string;
-  role: 'operator' | 'engineer';
+  role: 'operator' | 'engineer' | 'admin';
 }
 
 export interface UpdateUserPayload {
-  role?: 'operator' | 'engineer';
+  role?: 'operator' | 'engineer' | 'admin';
   is_active?: boolean;
 }
 

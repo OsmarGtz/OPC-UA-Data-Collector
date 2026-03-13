@@ -7,9 +7,9 @@ time.monotonic so duration thresholds can be controlled precisely.
 
 from unittest.mock import patch
 
+from httpx import AsyncClient
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
 from sqlalchemy import select
 
 from app.alerts.evaluator import RuleEvaluator

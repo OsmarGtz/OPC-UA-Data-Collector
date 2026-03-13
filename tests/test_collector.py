@@ -11,7 +11,7 @@ Test layers:
   - TestCollectorIntegration : end-to-end — 3 poll cycles land the right rows
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 import pytest_asyncio
@@ -197,10 +197,12 @@ class TestDatabaseWriter:
     async def test_bulk_insert_returns_correct_count(self, test_tags):
         """bulk_insert must return the number of rows it inserted."""
         writer = DatabaseWriter()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         rows = [
-            {"tag_id": test_tags[0].id, "value": TEMP_VALUE,  "raw_value": str(TEMP_VALUE),  "quality": "Good", "timestamp": now},
-            {"tag_id": test_tags[1].id, "value": PRESS_VALUE, "raw_value": str(PRESS_VALUE), "quality": "Good", "timestamp": now},
+            {"tag_id": test_tags[0].id, "value": TEMP_VALUE,
+             "raw_value": str(TEMP_VALUE), "quality": "Good", "timestamp": now},
+            {"tag_id": test_tags[1].id, "value": PRESS_VALUE,
+             "raw_value": str(PRESS_VALUE), "quality": "Good", "timestamp": now},
         ]
 
         async with TestingSessionLocal() as session:
@@ -211,10 +213,12 @@ class TestDatabaseWriter:
     async def test_bulk_insert_persists_rows(self, test_tags):
         """Rows inserted by bulk_insert must be queryable in a separate session."""
         writer = DatabaseWriter()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         rows = [
-            {"tag_id": test_tags[0].id, "value": TEMP_VALUE,  "raw_value": str(TEMP_VALUE),  "quality": "Good", "timestamp": now},
-            {"tag_id": test_tags[1].id, "value": PRESS_VALUE, "raw_value": str(PRESS_VALUE), "quality": "Good", "timestamp": now},
+            {"tag_id": test_tags[0].id, "value": TEMP_VALUE,
+             "raw_value": str(TEMP_VALUE), "quality": "Good", "timestamp": now},
+            {"tag_id": test_tags[1].id, "value": PRESS_VALUE,
+             "raw_value": str(PRESS_VALUE), "quality": "Good", "timestamp": now},
         ]
 
         async with TestingSessionLocal() as session:
@@ -265,7 +269,7 @@ class TestCollectorIntegration:
         try:
             for _ in range(POLL_CYCLES):
                 raw = await client.read_node_values(node_ids)
-                now = datetime.now(timezone.utc)
+                now = datetime.now(UTC)
                 rows = [
                     {
                         "tag_id": tag_by_node[nid].id,
@@ -307,7 +311,7 @@ class TestCollectorIntegration:
 
         try:
             raw = await client.read_node_values(list(tag_by_node.keys()))
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             rows = [
                 {
                     "tag_id": tag_by_node[nid].id,
@@ -350,7 +354,7 @@ class TestCollectorIntegration:
 
         try:
             raw = await client.read_node_values(list(tag_by_node.keys()))
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             rows = [
                 {
                     "tag_id": tag_by_node[nid].id,

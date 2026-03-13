@@ -52,7 +52,8 @@ class ReadingResponse(ReadingBase):
 
 
 class LatestReadingResponse(BaseModel):
-    """Most recent reading per tag, enriched with tag metadata. Returned by GET /equipment/{id}/latest."""
+    """Most recent reading per tag, enriched with tag metadata.
+    Returned by GET /equipment/{id}/latest."""
 
     model_config = ConfigDict(
         json_schema_extra={

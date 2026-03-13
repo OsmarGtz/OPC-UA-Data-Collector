@@ -90,11 +90,11 @@ async def refresh(data: RefreshRequest, db: AsyncSession = Depends(get_db)) -> T
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token.",
             )
-    except JWTError:
+    except JWTError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token.",
-        )
+        ) from err
 
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
@@ -116,7 +116,10 @@ async def change_own_password(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     if not verify_password(data.current_password, current_user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect.",
+        )
     current_user.hashed_password = hash_password(data.new_password)
     await db.commit()
 
@@ -140,10 +143,14 @@ async def create_user(
 ) -> User:
     result = await db.execute(select(User).where(User.username == data.username))
     if result.scalar_one_or_none():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already registered.")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Username already registered."
+        )
     result = await db.execute(select(User).where(User.email == data.email))
     if result.scalar_one_or_none():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered.")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Email already registered."
+        )
 
     new_user = User(
         username=data.username,
@@ -169,7 +176,10 @@ async def update_user(
     if target is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
     if target.id == current_user.id and data.is_active is False:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot deactivate your own account.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot deactivate your own account.",
+        )
     if data.role is not None:
         target.role = data.role
     if data.is_active is not None:
@@ -201,7 +211,10 @@ async def delete_user(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     if user_id == current_user.id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account.",
+        )
     result = await db.execute(select(User).where(User.id == user_id))
     target = result.scalar_one_or_none()
     if target is None:

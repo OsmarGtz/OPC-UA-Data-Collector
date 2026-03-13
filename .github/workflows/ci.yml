@@ -78,9 +78,10 @@ jobs:
         run: pip install -r requirements.txt pytest-cov
 
       - name: Run Alembic migrations
-        # Alembic CLI uses psycopg2 (sync driver) — see alembic.ini
+        # env.py imports app.database at module level, which requires an asyncpg URL.
+        # The actual migration connection is made via env.py using asyncpg.
         env:
-          DATABASE_URL: postgresql+psycopg2://opc_user:opc_password@localhost:5432/opc_test_db
+          DATABASE_URL: postgresql+asyncpg://opc_user:opc_password@localhost:5432/opc_test_db
           JWT_SECRET: ci-test-secret-not-for-production
         run: alembic upgrade head
 

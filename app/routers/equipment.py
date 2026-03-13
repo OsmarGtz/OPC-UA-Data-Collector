@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,9 +13,9 @@ from app.schemas.reading import LatestReadingResponse, ReadingResponse
 
 router = APIRouter(prefix="/equipment", tags=["Equipment"])
 
-_404 = {404: {"description": "Equipment not found"}}
-_AUTH = {401: {"description": "Missing or invalid token"}}
-_RBAC = {403: {"description": "Insufficient role (engineer or admin required)"}}
+_404: dict[int | str, dict[str, Any]] = {404: {"description": "Equipment not found"}}
+_AUTH: dict[int | str, dict[str, Any]] = {401: {"description": "Missing or invalid token"}}
+_RBAC: dict[int | str, dict[str, Any]] = {403: {"description": "Insufficient role (engineer or admin required)"}}
 
 
 @router.get(
@@ -45,7 +46,8 @@ async def create_equipment(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_role("engineer", "admin")),
 ):
-    """Register a new physical asset. Name must be unique. Requires **engineer** or **admin** role."""
+    """Register a new physical asset. Name must be unique.
+    Requires **engineer** or **admin** role."""
     existing = await crud.equipment.get_equipment_by_name(db, data.name)
     if existing:
         raise HTTPException(
@@ -85,7 +87,8 @@ async def update_equipment(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_role("engineer", "admin")),
 ):
-    """Partially update an equipment record (name, description, location). Requires **engineer** or **admin** role."""
+    """Partially update an equipment record (name, description, location).
+    Requires **engineer** or **admin** role."""
     equipment = await crud.equipment.get_equipment(db, equipment_id)
     if not equipment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Equipment not found.")
