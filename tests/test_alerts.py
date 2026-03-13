@@ -5,8 +5,6 @@ Evaluator tests are pure in-memory — they use a real DB session but mock
 time.monotonic so duration thresholds can be controlled precisely.
 """
 
-from unittest.mock import patch
-
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
@@ -121,22 +119,22 @@ async def test_duration_zero_fires_immediately(tag_and_rule_factory):
 async def test_duration_not_met_does_not_fire(tag_and_rule_factory):
     """Condition met, but elapsed time < duration → no alert yet."""
     tag_id, rule_id = await tag_and_rule_factory("gt", 50.0, duration=30.0)
-    evaluator = RuleEvaluator()
 
-    # time.monotonic() call pattern per check():
-    #   cache-miss path: 2 calls in _get_rules + 1 now_mono = 3 per check call
-    #   cache-hit  path: 1 call  in _get_rules + 1 now_mono = 2 per check call
+    # _clock call pattern per check():
+    #   cache-miss path: _get_rules calls _clock twice + check calls once = 3
+    #   cache-hit  path: _get_rules calls _clock once  + check calls once = 2
     #
-    # First check (t=0):  cache miss → [0.0, 0.0, 0.0]
-    #   _cache_expires_at becomes 0.0 + 30.0 = 30.0
-    # Second check (t=10): cache hit (10<30) → [10.0, 10.0]
-    #   elapsed = 10 - 0 = 10 < 30 → no alert
-    mock_times = [0.0, 0.0, 0.0, 10.0, 10.0]
-    with patch("app.alerts.evaluator.time.monotonic", side_effect=mock_times):
-        async with TestingSessionLocal() as session:
-            await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
-        async with TestingSessionLocal() as session:
-            await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
+    # First check (t=0):  cache miss → clock returns 0.0, 0.0, 0.0
+    #   _cache_expires_at = 0.0 + 30.0 = 30.0; state.started_at = 0.0
+    # Second check (t=10): cache hit (10 < 30) → clock returns 10.0, 10.0
+    #   elapsed = 10.0 - 0.0 = 10 < 30 → no alert fired
+    clock = iter([0.0, 0.0, 0.0, 10.0, 10.0])
+    evaluator = RuleEvaluator(_clock=lambda: next(clock))
+
+    async with TestingSessionLocal() as session:
+        await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
+    async with TestingSessionLocal() as session:
+        await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
 
     async with TestingSessionLocal() as session:
         result = await session.execute(select(Alert).where(Alert.rule_id == rule_id))
@@ -147,18 +145,18 @@ async def test_duration_not_met_does_not_fire(tag_and_rule_factory):
 async def test_duration_met_fires_alert(tag_and_rule_factory):
     """Condition met and elapsed time >= duration → alert fires on second check."""
     tag_id, rule_id = await tag_and_rule_factory("gt", 50.0, duration=30.0)
-    evaluator = RuleEvaluator()
 
-    # First check (t=0):  cache miss → [0.0, 0.0, 0.0]; state starts at 0.0
-    #   _cache_expires_at = 0.0 + 30.0 = 30.0
-    # Second check (t=31): 31 > 30 → cache miss again → [31.0, 31.0, 31.0]
-    #   elapsed = 31 - 0 = 31 >= 30 → fire alert
-    mock_times = [0.0, 0.0, 0.0, 31.0, 31.0, 31.0]
-    with patch("app.alerts.evaluator.time.monotonic", side_effect=mock_times):
-        async with TestingSessionLocal() as session:
-            await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
-        async with TestingSessionLocal() as session:
-            await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
+    # First check (t=0):  cache miss → clock returns 0.0, 0.0, 0.0
+    #   _cache_expires_at = 0.0 + 30.0 = 30.0; state.started_at = 0.0
+    # Second check (t=31): 31 > 30 → cache miss → clock returns 31.0, 31.0, 31.0
+    #   elapsed = 31.0 - 0.0 = 31 >= 30 → alert fires
+    clock = iter([0.0, 0.0, 0.0, 31.0, 31.0, 31.0])
+    evaluator = RuleEvaluator(_clock=lambda: next(clock))
+
+    async with TestingSessionLocal() as session:
+        await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
+    async with TestingSessionLocal() as session:
+        await evaluator.check(session, [{"tag_id": tag_id, "value": 100.0, "quality": "Good"}])
 
     async with TestingSessionLocal() as session:
         result = await session.execute(select(Alert).where(Alert.rule_id == rule_id))

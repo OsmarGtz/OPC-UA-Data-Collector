@@ -2,9 +2,8 @@
 Tests for JWT authentication endpoints and route-level authorization.
 """
 
-from httpx import AsyncClient
 import pytest
-
+from httpx import AsyncClient
 
 # ---------------------------------------------------------------------------
 # Helpers

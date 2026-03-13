@@ -11,6 +11,7 @@ leave the alerts table in a half-written state.
 """
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -47,7 +48,8 @@ class RuleEvaluator:
 
     _CACHE_TTL: float = 30.0  # seconds between rule re-loads from DB
 
-    def __init__(self) -> None:
+    def __init__(self, _clock: Callable[[], float] = time.monotonic) -> None:
+        self._clock = _clock
         self._state: dict[int, _ConditionState] = {}  # rule_id -> state
         self._rules_cache: list[_CachedRule] = []
         self._cache_expires_at: float = 0.0
@@ -75,7 +77,7 @@ class RuleEvaluator:
             if r.get("quality") == "Good" and r.get("value") is not None
         }
 
-        now_mono = time.monotonic()
+        now_mono = self._clock()
         now_dt = datetime.now(UTC)
         changed = False
 
@@ -127,7 +129,7 @@ class RuleEvaluator:
     # ------------------------------------------------------------------
 
     async def _get_rules(self, session: AsyncSession) -> list[_CachedRule]:
-        if time.monotonic() < self._cache_expires_at:
+        if self._clock() < self._cache_expires_at:
             return self._rules_cache
 
         result = await session.execute(select(AlertRule).where(AlertRule.is_active.is_(True)))
@@ -144,7 +146,7 @@ class RuleEvaluator:
             )
             for r in db_rules
         ]
-        self._cache_expires_at = time.monotonic() + self._CACHE_TTL
+        self._cache_expires_at = self._clock() + self._CACHE_TTL
         return self._rules_cache
 
     @staticmethod
