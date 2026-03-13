@@ -7,15 +7,14 @@ time.monotonic so duration thresholds can be controlled precisely.
 
 from unittest.mock import patch
 
-from httpx import AsyncClient
 import pytest
 import pytest_asyncio
+from httpx import AsyncClient
 from sqlalchemy import select
 
 from app.alerts.evaluator import RuleEvaluator
 from app.alerts.models import Alert, AlertRule
 from tests.conftest import TestingSessionLocal
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -28,10 +27,9 @@ async def tag_and_rule_factory(engineer_client: AsyncClient):
     Returns an async factory function that creates one equipment+tag via the API
     and one AlertRule directly in the DB, then yields (tag_id, rule_id).
     """
+
     async def _make(operator: str, threshold: float, duration: float = 0.0) -> tuple[int, int]:
-        eq = (
-            await engineer_client.post("/api/v1/equipment/", json={"name": "Factory-Eq"})
-        ).json()
+        eq = (await engineer_client.post("/api/v1/equipment/", json={"name": "Factory-Eq"})).json()
         tag = (
             await engineer_client.post(
                 "/api/v1/tags/",
@@ -72,19 +70,17 @@ async def tag_and_rule_factory(engineer_client: AsyncClient):
 @pytest.mark.parametrize(
     "operator,threshold,value,should_fire",
     [
-        ("gt",  10.0, 11.0, True),
-        ("gt",  10.0,  9.0, False),
-        ("lt",  10.0,  9.0, True),
-        ("lt",  10.0, 11.0, False),
+        ("gt", 10.0, 11.0, True),
+        ("gt", 10.0, 9.0, False),
+        ("lt", 10.0, 9.0, True),
+        ("lt", 10.0, 11.0, False),
         ("gte", 10.0, 10.0, True),
-        ("gte", 10.0,  9.9, False),
+        ("gte", 10.0, 9.9, False),
         ("lte", 10.0, 10.0, True),
         ("lte", 10.0, 10.1, False),
     ],
 )
-async def test_operator_correctness(
-    tag_and_rule_factory, operator, threshold, value, should_fire
-):
+async def test_operator_correctness(tag_and_rule_factory, operator, threshold, value, should_fire):
     tag_id, rule_id = await tag_and_rule_factory(operator, threshold)
     evaluator = RuleEvaluator()
     readings = [{"tag_id": tag_id, "value": value, "quality": "Good"}]
@@ -93,9 +89,7 @@ async def test_operator_correctness(
         await evaluator.check(session, readings)
 
     async with TestingSessionLocal() as session:
-        result = await session.execute(
-            select(Alert).where(Alert.rule_id == rule_id)
-        )
+        result = await session.execute(select(Alert).where(Alert.rule_id == rule_id))
         alerts = result.scalars().all()
 
     if should_fire:
@@ -204,9 +198,7 @@ async def test_condition_clears_auto_resolves(tag_and_rule_factory):
 @pytest.mark.asyncio
 async def test_two_rules_same_tag_evaluated_independently(engineer_client: AsyncClient):
     """Two rules on the same tag fire/not-fire independently."""
-    eq = (
-        await engineer_client.post("/api/v1/equipment/", json={"name": "Multi-Rule-Eq"})
-    ).json()
+    eq = (await engineer_client.post("/api/v1/equipment/", json={"name": "Multi-Rule-Eq"})).json()
     tag = (
         await engineer_client.post(
             "/api/v1/tags/",
@@ -217,12 +209,20 @@ async def test_two_rules_same_tag_evaluated_independently(engineer_client: Async
 
     async with TestingSessionLocal() as session:
         rule_hi = AlertRule(
-            name="high_rule", tag_id=tag_id, operator="gt",
-            threshold=80.0, duration_seconds=0.0, severity="critical",
+            name="high_rule",
+            tag_id=tag_id,
+            operator="gt",
+            threshold=80.0,
+            duration_seconds=0.0,
+            severity="critical",
         )
         rule_lo = AlertRule(
-            name="low_rule", tag_id=tag_id, operator="lt",
-            threshold=20.0, duration_seconds=0.0, severity="info",
+            name="low_rule",
+            tag_id=tag_id,
+            operator="lt",
+            threshold=20.0,
+            duration_seconds=0.0,
+            severity="info",
         )
         session.add_all([rule_hi, rule_lo])
         await session.commit()
@@ -237,11 +237,15 @@ async def test_two_rules_same_tag_evaluated_independently(engineer_client: Async
 
     async with TestingSessionLocal() as session:
         hi_alerts = (
-            await session.execute(select(Alert).where(Alert.rule_id == rule_hi_id))
-        ).scalars().all()
+            (await session.execute(select(Alert).where(Alert.rule_id == rule_hi_id)))
+            .scalars()
+            .all()
+        )
         lo_alerts = (
-            await session.execute(select(Alert).where(Alert.rule_id == rule_lo_id))
-        ).scalars().all()
+            (await session.execute(select(Alert).where(Alert.rule_id == rule_lo_id)))
+            .scalars()
+            .all()
+        )
 
     assert len(hi_alerts) == 1
     assert len(lo_alerts) == 0
@@ -254,9 +258,7 @@ async def test_two_rules_same_tag_evaluated_independently(engineer_client: Async
 
 @pytest.mark.asyncio
 async def test_create_alert_rule_via_api(engineer_client: AsyncClient):
-    eq = (
-        await engineer_client.post("/api/v1/equipment/", json={"name": "API-Eq"})
-    ).json()
+    eq = (await engineer_client.post("/api/v1/equipment/", json={"name": "API-Eq"})).json()
     tag = (
         await engineer_client.post(
             "/api/v1/tags/",
@@ -303,9 +305,7 @@ async def test_list_alerts_requires_auth(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_acknowledge_alert(engineer_client: AsyncClient):
-    eq = (
-        await engineer_client.post("/api/v1/equipment/", json={"name": "Ack-Eq"})
-    ).json()
+    eq = (await engineer_client.post("/api/v1/equipment/", json={"name": "Ack-Eq"})).json()
     tag = (
         await engineer_client.post(
             "/api/v1/tags/",
@@ -317,8 +317,12 @@ async def test_acknowledge_alert(engineer_client: AsyncClient):
     # Create rule and fire alert via evaluator
     async with TestingSessionLocal() as session:
         rule = AlertRule(
-            name="ack_rule", tag_id=tag_id, operator="gt",
-            threshold=0.0, duration_seconds=0.0, severity="warning",
+            name="ack_rule",
+            tag_id=tag_id,
+            operator="gt",
+            threshold=0.0,
+            duration_seconds=0.0,
+            severity="warning",
         )
         session.add(rule)
         await session.commit()

@@ -14,17 +14,12 @@ async def get_tags_by_equipment(
     db: AsyncSession, equipment_id: int, skip: int = 0, limit: int = 100
 ) -> list[Tag]:
     result = await db.execute(
-        select(Tag)
-        .where(Tag.equipment_id == equipment_id)
-        .offset(skip)
-        .limit(limit)
+        select(Tag).where(Tag.equipment_id == equipment_id).offset(skip).limit(limit)
     )
     return list(result.scalars().all())
 
 
-async def get_all_tags(
-    db: AsyncSession, skip: int = 0, limit: int = 100
-) -> list[Tag]:
+async def get_all_tags(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[Tag]:
     result = await db.execute(select(Tag).offset(skip).limit(limit))
     return list(result.scalars().all())
 

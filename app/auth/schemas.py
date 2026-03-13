@@ -47,9 +47,7 @@ class LoginRequest(BaseModel):
     password: str
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {"username": "admin", "password": "password"}
-        }
+        json_schema_extra={"example": {"username": "admin", "password": "password"}}
     )
 
 
@@ -73,11 +71,7 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-        }
+        json_schema_extra={"example": {"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}}
     )
 
 
@@ -111,6 +105,4 @@ class AdminChangePasswordRequest(BaseModel):
 
     new_password: str
 
-    model_config = ConfigDict(
-        json_schema_extra={"example": {"new_password": "new_s3cur3P@ss!"}}
-    )
+    model_config = ConfigDict(json_schema_extra={"example": {"new_password": "new_s3cur3P@ss!"}})

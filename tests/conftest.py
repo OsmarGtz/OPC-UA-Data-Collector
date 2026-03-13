@@ -67,7 +67,7 @@ async def client():
 
     async with AsyncClient(
         transport=ASGITransport(app=app),  # type: ignore[arg-type]
-        base_url="http://test"
+        base_url="http://test",
     ) as ac:
         yield ac
 
@@ -76,6 +76,7 @@ async def client():
 
 async def _make_auth_client(role: str) -> AsyncClient:
     """Helper: register a user and return a client with Authorization header set."""
+
     async def override_get_db():
         async with TestingSessionLocal() as session:
             yield session

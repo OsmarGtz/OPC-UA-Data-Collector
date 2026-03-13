@@ -15,7 +15,9 @@ router = APIRouter(prefix="/equipment", tags=["Equipment"])
 
 _404: dict[int | str, dict[str, Any]] = {404: {"description": "Equipment not found"}}
 _AUTH: dict[int | str, dict[str, Any]] = {401: {"description": "Missing or invalid token"}}
-_RBAC: dict[int | str, dict[str, Any]] = {403: {"description": "Insufficient role (engineer or admin required)"}}
+_RBAC: dict[int | str, dict[str, Any]] = {
+    403: {"description": "Insufficient role (engineer or admin required)"}
+}
 
 
 @router.get(

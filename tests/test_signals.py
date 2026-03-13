@@ -18,6 +18,7 @@ from simulator.signals import SignalGenerator
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_config(**overrides) -> TagConfig:
     """Return a TagConfig with safe defaults; override any field via kwargs."""
     defaults = dict(
@@ -28,8 +29,8 @@ def make_config(**overrides) -> TagConfig:
         base=50.0,
         amplitude=10.0,
         period=60.0,
-        noise_std=0.0,        # deterministic by default
-        spike_probability=0.0, # no spikes by default
+        noise_std=0.0,  # deterministic by default
+        spike_probability=0.0,  # no spikes by default
         spike_magnitude=0.0,
         spike_decay_seconds=1.0,
     )
@@ -52,6 +53,7 @@ def make_generator(fixed_start: float = 0.0, **overrides) -> SignalGenerator:
 # Basic contract
 # ---------------------------------------------------------------------------
 
+
 def test_value_returns_float():
     gen = make_generator()
     assert isinstance(gen.value(), float)
@@ -66,6 +68,7 @@ def test_value_is_finite():
 # ---------------------------------------------------------------------------
 # Sinusoidal component
 # ---------------------------------------------------------------------------
+
 
 def test_zero_amplitude_equals_base():
     """With amplitude=0 and no noise or spikes, value must equal base exactly."""
@@ -116,6 +119,7 @@ def test_zero_period_returns_base():
 # Noise component
 # ---------------------------------------------------------------------------
 
+
 def test_noise_varies_output():
     """With noise_std > 0, repeated samples at the same instant must not all be equal."""
     gen = make_generator(amplitude=0.0, noise_std=2.0)
@@ -137,6 +141,7 @@ def test_zero_noise_is_deterministic():
 # ---------------------------------------------------------------------------
 # Spike component
 # ---------------------------------------------------------------------------
+
 
 def test_no_spike_when_probability_zero():
     """spike_probability=0 must never activate a spike regardless of calls."""
@@ -220,6 +225,7 @@ def test_spike_eventually_deactivates():
 # Random phase
 # ---------------------------------------------------------------------------
 
+
 def test_two_generators_start_at_different_phases():
     """
     Two generators built from the same config must produce different values
@@ -234,6 +240,6 @@ def test_two_generators_start_at_different_phases():
     with patch("simulator.signals.time.monotonic", return_value=t):
         v1 = gen1.value()
         v2 = gen2.value()
-    assert v1 != pytest.approx(v2, abs=1e-3), (
-        "Generators with different random phases should produce different values"
-    )
+    assert v1 != pytest.approx(
+        v2, abs=1e-3
+    ), "Generators with different random phases should produce different values"

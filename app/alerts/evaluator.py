@@ -34,7 +34,8 @@ class _CachedRule:
 @dataclass
 class _ConditionState:
     """Tracks when the condition for a rule first became true."""
-    started_at: float       # time.monotonic() when the condition first fired
+
+    started_at: float  # time.monotonic() when the condition first fired
     alert_id: int | None = None  # DB id of the open Alert row, if already persisted
 
 
@@ -44,10 +45,10 @@ class RuleEvaluator:
     collector service so that duration tracking survives across poll cycles.
     """
 
-    _CACHE_TTL: float = 30.0   # seconds between rule re-loads from DB
+    _CACHE_TTL: float = 30.0  # seconds between rule re-loads from DB
 
     def __init__(self) -> None:
-        self._state: dict[int, _ConditionState] = {}     # rule_id -> state
+        self._state: dict[int, _ConditionState] = {}  # rule_id -> state
         self._rules_cache: list[_CachedRule] = []
         self._cache_expires_at: float = 0.0
 
@@ -103,15 +104,13 @@ class RuleEvaluator:
                         fired_at=now_dt,
                     )
                     session.add(alert)
-                    await session.flush()   # populate alert.id
+                    await session.flush()  # populate alert.id
                     state.alert_id = alert.id
                     changed = True
             else:
                 if state is not None and state.alert_id is not None:
                     # Condition cleared — auto-resolve the open alert.
-                    result = await session.execute(
-                        select(Alert).where(Alert.id == state.alert_id)
-                    )
+                    result = await session.execute(select(Alert).where(Alert.id == state.alert_id))
                     open_alert = result.scalar_one_or_none()
                     if open_alert is not None and open_alert.resolved_at is None:
                         open_alert.resolved_at = now_dt
@@ -131,9 +130,7 @@ class RuleEvaluator:
         if time.monotonic() < self._cache_expires_at:
             return self._rules_cache
 
-        result = await session.execute(
-            select(AlertRule).where(AlertRule.is_active.is_(True))
-        )
+        result = await session.execute(select(AlertRule).where(AlertRule.is_active.is_(True)))
         db_rules = result.scalars().all()
         self._rules_cache = [
             _CachedRule(

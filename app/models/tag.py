@@ -27,13 +27,9 @@ class Tag(Base):
     equipment_id: Mapped[int] = mapped_column(
         ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    equipment: Mapped[Equipment] = relationship(
-        "Equipment", back_populates="tags"
-    )
+    equipment: Mapped[Equipment] = relationship("Equipment", back_populates="tags")
     readings: Mapped[list[Reading]] = relationship(
         "Reading", back_populates="tag", cascade="all, delete-orphan"
     )

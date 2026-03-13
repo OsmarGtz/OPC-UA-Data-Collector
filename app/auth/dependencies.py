@@ -40,6 +40,7 @@ async def get_current_user(
 
 def require_role(*roles: str):
     """Factory that accepts one or more allowed roles, e.g. require_role('engineer', 'admin')."""
+
     async def _check(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in roles:
             raise HTTPException(

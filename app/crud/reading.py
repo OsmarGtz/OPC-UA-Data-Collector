@@ -42,9 +42,7 @@ async def create_reading(db: AsyncSession, data: ReadingCreate) -> Reading:
     return reading
 
 
-async def update_reading(
-    db: AsyncSession, reading: Reading, data: ReadingUpdate
-) -> Reading:
+async def update_reading(db: AsyncSession, reading: Reading, data: ReadingUpdate) -> Reading:
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(reading, field, value)
@@ -95,9 +93,7 @@ async def get_readings_by_equipment(
 ) -> list[Reading]:
     """Return readings for all tags of an equipment, optionally bounded by time."""
     stmt = (
-        select(Reading)
-        .join(Tag, Reading.tag_id == Tag.id)
-        .where(Tag.equipment_id == equipment_id)
+        select(Reading).join(Tag, Reading.tag_id == Tag.id).where(Tag.equipment_id == equipment_id)
     )
     if start:
         stmt = stmt.where(Reading.timestamp >= start)

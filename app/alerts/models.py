@@ -28,9 +28,7 @@ class AlertRule(Base):
     created_by: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     tag: Mapped[Tag] = relationship("Tag", lazy="selectin")
     creator: Mapped[User] = relationship("User", foreign_keys=[created_by], lazy="selectin")
@@ -47,13 +45,9 @@ class Alert(Base):
         ForeignKey("alert_rules.id", ondelete="CASCADE"), nullable=False
     )
     triggering_value: Mapped[float] = mapped_column(Float, nullable=False)
-    fired_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    fired_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    acknowledged_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     acknowledged_by: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

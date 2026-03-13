@@ -30,24 +30,25 @@ from tests.conftest import TestingSessionLocal
 # Namespace index 2 is guaranteed: asyncua reserves 0 (OPC-UA standard) and
 # 1 (server namespace), so the first register_namespace call always returns 2.
 # ---------------------------------------------------------------------------
-_OPC_BIND_URL   = "opc.tcp://0.0.0.0:48400"
+_OPC_BIND_URL = "opc.tcp://0.0.0.0:48400"
 _OPC_CLIENT_URL = "opc.tcp://127.0.0.1:48400"
-_NS_URI         = "http://test-collector-ns"
-_NS_IDX         = 2          # matches asyncua's guaranteed return value
+_NS_URI = "http://test-collector-ns"
+_NS_IDX = 2  # matches asyncua's guaranteed return value
 
-_NODE_TEMP_ID  = 9001
+_NODE_TEMP_ID = 9001
 _NODE_PRESS_ID = 9002
 
-NODE_TEMP  = f"ns={_NS_IDX};i={_NODE_TEMP_ID}"
+NODE_TEMP = f"ns={_NS_IDX};i={_NODE_TEMP_ID}"
 NODE_PRESS = f"ns={_NS_IDX};i={_NODE_PRESS_ID}"
 
-TEMP_VALUE  = 71.5
+TEMP_VALUE = 71.5
 PRESS_VALUE = 4.5
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest_asyncio.fixture
 async def opc_test_server():
@@ -64,26 +65,28 @@ async def opc_test_server():
     server.set_endpoint(_OPC_BIND_URL)
     idx = await server.register_namespace(_NS_URI)
 
-    assert idx == _NS_IDX, (
-        f"Unexpected namespace index {idx}. Update _NS_IDX in test_collector.py."
-    )
+    assert idx == _NS_IDX, f"Unexpected namespace index {idx}. Update _NS_IDX in test_collector.py."
 
     objects = server.nodes.objects
     pump = await objects.add_object(idx, "TestPump")
 
     temp_node = await pump.add_variable(
-        ua.NodeId(_NODE_TEMP_ID, idx), "temperature",
-        TEMP_VALUE, varianttype=ua.VariantType.Float,
+        ua.NodeId(_NODE_TEMP_ID, idx),
+        "temperature",
+        TEMP_VALUE,
+        varianttype=ua.VariantType.Float,
     )
     press_node = await pump.add_variable(
-        ua.NodeId(_NODE_PRESS_ID, idx), "pressure",
-        PRESS_VALUE, varianttype=ua.VariantType.Float,
+        ua.NodeId(_NODE_PRESS_ID, idx),
+        "pressure",
+        PRESS_VALUE,
+        varianttype=ua.VariantType.Float,
     )
     await temp_node.set_writable(True)
     await press_node.set_writable(True)
 
     async with server:
-        yield   # server is live while the test runs
+        yield  # server is live while the test runs
 
 
 @pytest_asyncio.fixture
@@ -128,8 +131,8 @@ async def test_tags():
 # OpcUaClient tests
 # ---------------------------------------------------------------------------
 
-class TestOpcUaClient:
 
+class TestOpcUaClient:
     async def test_connect_succeeds(self, opc_test_server):
         """Client must connect to the in-process server without error."""
         client = OpcUaClient(_OPC_CLIENT_URL)
@@ -192,17 +195,27 @@ class TestOpcUaClient:
 # DatabaseWriter tests
 # ---------------------------------------------------------------------------
 
-class TestDatabaseWriter:
 
+class TestDatabaseWriter:
     async def test_bulk_insert_returns_correct_count(self, test_tags):
         """bulk_insert must return the number of rows it inserted."""
         writer = DatabaseWriter()
         now = datetime.now(UTC)
         rows = [
-            {"tag_id": test_tags[0].id, "value": TEMP_VALUE,
-             "raw_value": str(TEMP_VALUE), "quality": "Good", "timestamp": now},
-            {"tag_id": test_tags[1].id, "value": PRESS_VALUE,
-             "raw_value": str(PRESS_VALUE), "quality": "Good", "timestamp": now},
+            {
+                "tag_id": test_tags[0].id,
+                "value": TEMP_VALUE,
+                "raw_value": str(TEMP_VALUE),
+                "quality": "Good",
+                "timestamp": now,
+            },
+            {
+                "tag_id": test_tags[1].id,
+                "value": PRESS_VALUE,
+                "raw_value": str(PRESS_VALUE),
+                "quality": "Good",
+                "timestamp": now,
+            },
         ]
 
         async with TestingSessionLocal() as session:
@@ -215,10 +228,20 @@ class TestDatabaseWriter:
         writer = DatabaseWriter()
         now = datetime.now(UTC)
         rows = [
-            {"tag_id": test_tags[0].id, "value": TEMP_VALUE,
-             "raw_value": str(TEMP_VALUE), "quality": "Good", "timestamp": now},
-            {"tag_id": test_tags[1].id, "value": PRESS_VALUE,
-             "raw_value": str(PRESS_VALUE), "quality": "Good", "timestamp": now},
+            {
+                "tag_id": test_tags[0].id,
+                "value": TEMP_VALUE,
+                "raw_value": str(TEMP_VALUE),
+                "quality": "Good",
+                "timestamp": now,
+            },
+            {
+                "tag_id": test_tags[1].id,
+                "value": PRESS_VALUE,
+                "raw_value": str(PRESS_VALUE),
+                "quality": "Good",
+                "timestamp": now,
+            },
         ]
 
         async with TestingSessionLocal() as session:
@@ -226,9 +249,7 @@ class TestDatabaseWriter:
 
         async with TestingSessionLocal() as verify_session:
             result = await verify_session.execute(
-                select(Reading).where(
-                    Reading.tag_id.in_([test_tags[0].id, test_tags[1].id])
-                )
+                select(Reading).where(Reading.tag_id.in_([test_tags[0].id, test_tags[1].id]))
             )
             readings = result.scalars().all()
 
@@ -249,11 +270,9 @@ class TestDatabaseWriter:
 # End-to-end integration
 # ---------------------------------------------------------------------------
 
-class TestCollectorIntegration:
 
-    async def test_three_poll_cycles_create_correct_row_count(
-        self, opc_test_server, test_tags
-    ):
+class TestCollectorIntegration:
+    async def test_three_poll_cycles_create_correct_row_count(self, opc_test_server, test_tags):
         """
         Simulating 3 poll cycles (OPC-UA read → DB write) must produce
         exactly 3 × len(tags) Reading rows — one per tag per cycle.
@@ -288,17 +307,13 @@ class TestCollectorIntegration:
 
         async with TestingSessionLocal() as session:
             result = await session.execute(
-                select(Reading).where(
-                    Reading.tag_id.in_([t.id for t in test_tags])
-                )
+                select(Reading).where(Reading.tag_id.in_([t.id for t in test_tags]))
             )
             all_readings = result.scalars().all()
 
         assert len(all_readings) == POLL_CYCLES * len(test_tags)
 
-    async def test_all_readings_have_good_quality(
-        self, opc_test_server, test_tags
-    ):
+    async def test_all_readings_have_good_quality(self, opc_test_server, test_tags):
         """
         Every reading written from the in-process server must have
         quality='Good' since all nodes exist and the server is healthy.
@@ -330,18 +345,14 @@ class TestCollectorIntegration:
 
         async with TestingSessionLocal() as session:
             result = await session.execute(
-                select(Reading).where(
-                    Reading.tag_id.in_([t.id for t in test_tags])
-                )
+                select(Reading).where(Reading.tag_id.in_([t.id for t in test_tags]))
             )
             readings = result.scalars().all()
 
         assert len(readings) > 0
         assert all(r.quality == "Good" for r in readings)
 
-    async def test_reading_values_match_opc_ua_source(
-        self, opc_test_server, test_tags
-    ):
+    async def test_reading_values_match_opc_ua_source(self, opc_test_server, test_tags):
         """
         The float values stored in the DB must match what the OPC-UA
         server was initialised with (within Float precision tolerance).
@@ -373,9 +384,7 @@ class TestCollectorIntegration:
 
         async with TestingSessionLocal() as session:
             result = await session.execute(
-                select(Reading).where(
-                    Reading.tag_id == tag_by_node[NODE_TEMP].id
-                )
+                select(Reading).where(Reading.tag_id == tag_by_node[NODE_TEMP].id)
             )
             temp_reading = result.scalar_one()
 

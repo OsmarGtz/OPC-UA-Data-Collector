@@ -1,6 +1,6 @@
 import os
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -83,12 +83,14 @@ async def _seed_admin() -> None:
         result = await db.execute(select(User).where(User.username == "admin"))
         existing = result.scalar_one_or_none()
         if existing is None:
-            db.add(User(
-                username="admin",
-                email="admin@localhost",
-                hashed_password=hash_password("password"),
-                role="admin",
-            ))
+            db.add(
+                User(
+                    username="admin",
+                    email="admin@localhost",
+                    hashed_password=hash_password("password"),
+                    role="admin",
+                )
+            )
             await db.commit()
         elif existing.role != "admin":
             existing.role = "admin"
@@ -160,9 +162,9 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(equipment.router, prefix="/api/v1")
-app.include_router(tags.router,      prefix="/api/v1")
-app.include_router(readings.router,  prefix="/api/v1")
-app.include_router(alerts_router,    prefix="/api/v1")
+app.include_router(tags.router, prefix="/api/v1")
+app.include_router(readings.router, prefix="/api/v1")
+app.include_router(alerts_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["Health"], summary="Liveness probe")

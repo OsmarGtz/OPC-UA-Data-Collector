@@ -109,6 +109,7 @@ async def refresh(data: RefreshRequest, db: AsyncSession = Depends(get_db)) -> T
 
 # ── Own-password change (any authenticated user) ─────────────────────────────
 
+
 @router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
 async def change_own_password(
     data: ChangePasswordRequest,
@@ -125,6 +126,7 @@ async def change_own_password(
 
 
 # ── User management (admin only) ─────────────────────────────────────────────
+
 
 @router.get("/users", response_model=list[UserResponse])
 async def list_users(

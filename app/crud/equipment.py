@@ -15,9 +15,7 @@ async def get_equipment_by_name(db: AsyncSession, name: str) -> Equipment | None
     return result.scalar_one_or_none()
 
 
-async def get_all_equipment(
-    db: AsyncSession, skip: int = 0, limit: int = 100
-) -> list[Equipment]:
+async def get_all_equipment(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[Equipment]:
     result = await db.execute(select(Equipment).offset(skip).limit(limit))
     return list(result.scalars().all())
 
