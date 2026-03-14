@@ -17,7 +17,6 @@ os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
 
-
 engine_test = create_async_engine(TEST_DATABASE_URL, echo=False, poolclass=NullPool)
 TestingSessionLocal = async_sessionmaker(
     bind=engine_test, class_=AsyncSession, expire_on_commit=False
