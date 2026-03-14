@@ -50,7 +50,7 @@ PRESS_VALUE = 4.5
 # ---------------------------------------------------------------------------
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def opc_test_server():
     """
     Spin up a minimal in-process OPC-UA server with two Float variable nodes.
