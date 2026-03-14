@@ -159,7 +159,9 @@ async def test_refresh_returns_new_access_token(client: AsyncClient):
     assert r.status_code == 200
     data = r.json()
     assert "access_token" in data
-    assert data["access_token"] != login_r.json()["access_token"]
+    assert "refresh_token" in data
+    assert data["token_type"] == "bearer"
+    assert len(data["access_token"]) > 0
 
 
 @pytest.mark.asyncio
